@@ -1,0 +1,92 @@
+#!/bin/sh
+
+#####
+# List VMs
+#
+# Author: Jeff King
+# Usage: ./listVMs (Will get VM name only)
+#        ./listVMs -details (Will list detailed VM info)
+#        ./listVMs -help (Print usage info)
+#
+#####
+
+# get command line arg
+myArg=$1
+
+if [ "$myArg" == "-help" ]
+then
+    head -11 $0
+    exit 1
+else
+    # Get current date stamp
+    startDate=$(date "+%Y%m%d%H%M")
+    `/bin/touch -t $startDate /tmp/file.$startDate`
+    totalVMCount=0
+    
+    # We only want to look at datastore1 which hosts current VMs (alt: datastore[0-9] will search all datastores)
+    for DS in `ls -d /vmfs/volumes/datastore1`
+    do
+        #datastoreVMCount=0
+        echo -e "\nVM Guests found on $DS last used before $startDate\n"
+        
+        echo -e "Virtual Machine Name\t\tVM Status\n"
+        # Grepping BASE from the filename will prevent older "template" VMs from appearing in list
+        find $DS/ -type f -name vmware.log ! -newer /tmp/file.$startDate -print | grep -v BASE | sort | while read -r vmLog
+        do
+            totalVMCount=$(expr $totalVMCount + 1)
+            #echo "DBUG: Log File: $vmLog"
+            vmPath=$(dirname "$vmLog")
+            vmDir=$(basename "$vmPath")
+            # Get vmx file info
+            find "$vmPath" -type f -name '*.vmx' -print | while read -r vmxFile
+            do
+                name=$(grep displayName "$vmxFile" | /bin/awk -F\" '{print $(NF-1)}')
+                vmdkDisk=$(grep vmdk "$vmxFile" | /bin/awk -F\" '{print $(NF-1)}')
+                chkBASE=$(echo $name | egrep '\[BASE\]')
+                chkTEST=$(echo $name | grep -i 'test' | grep -v 'ing')
+                chkEIAS=$(echo $name | grep -i 'EIAS')
+                #echo "DBUG: chkBASE: $chkBASE"
+                if [[ -n "$chkBASE" ]]
+                then
+                    #echo "DBUG: We have a BASE VM: $chkBASE"
+                    CID=$(egrep '^CID' "$vmPath/$vmdkDisk" | /bin/sed -e 's/CID=//' )
+                    parentCID=$(egrep '^parentCID' "$vmPath/$vmdkDisk" | /bin/sed -e 's/parentCID=//' )
+                elif [[ -n "$chkTEST" ]]
+                then
+                    #echo "DBUG: We have a TEST VM: $chkTEST"
+                    CID=$(egrep '^CID' "$vmPath/$vmdkDisk" | /bin/sed -e 's/CID=//' )
+                    parentCID=$(egrep '^parentCID' "$vmPath/$vmdkDisk" | /bin/sed -e 's/parentCID=//' )
+                elif [[ -n "$chkEIAS" ]]
+                then
+                    #echo "DBUG: We have a EIAS VM: $chkEIAS"
+                    CID=$(egrep '^CID' "$vmPath/$vmdkDisk" | /bin/sed -e 's/CID=//' )
+                    parentCID=$(egrep '^parentCID' "$vmPath/$vmdkDisk" | /bin/sed -e 's/parentCID=//' )        
+                else
+                    CID=$(egrep '^CID' "$vmdkDisk" | /bin/sed -e 's/CID=//' )
+                    parentCID=$(egrep '^parentCID' "$vmdkDisk" | /bin/sed -e 's/parentCID=//' )
+                fi
+                # Check to see if VM is running
+                vmStatus=$(esxcli vm process list | grep $name)
+                vmStatusMsg=""
+                if [[ -n "$vmStatus" ]]
+                then
+                    vmStatusMsg="Running"
+                fi
+                if [ "$myArg" == "-details" ]
+                then
+                    echo -e "$totalVMCount. VM Name: $name ($vmStatusMsg)\nvmxFile: $vmxFile\nVM Disk: $vmdkDisk"
+                    echo -e "CID: $CID\nparentCID: $parentCID" 
+                else
+                    echo -e "$totalVMCount. $name ($vmStatusMsg)"
+                fi
+            done
+            diskUsage=$(/bin/du -hs "$vmPath" | awk '{ print $1 }')
+            lastStarted=$(/bin/ls -l "$vmLog" | awk '{ printf("%s-%s-%s",$6,$7,$8); }') 
+            if [ "$myArg" == "-details" ]
+            then
+                echo -e "vmPath: $vmPath\nvmDir: $vmDir\nDisk Usage: $diskUsage\nLast Started: $lastStarted\n\n"
+            fi
+        done
+    done
+    `rm /tmp/file.$startDate`
+fi

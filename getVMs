@@ -1,0 +1,42 @@
+#!/bin/sh
+
+##############################################################################
+#
+# getVMs
+#
+# purpose: Get list of VMs and their status
+#
+# Author: Jeff King
+# Usage: ./getVMs (Will list VM details)
+#        ./getVMs -state (Will list VM running info)
+#        ./getVMs -help (Print usage info)
+#
+##############################################################################
+# get command line arg
+myArg=$1
+
+if [ "$myArg" == "-help" ]
+then
+    head -14 $0
+    exit 1
+else
+    if [ "$myArg" == "-state" ]
+    then
+        totalVMCount=0
+        echo -e "#\tVMID\tVM STATE\t\tVM NAME"
+        for myVM in `vim-cmd vmsvc/getallvms | grep -v Vmid |  awk '{printf("%s,%s\n", $1,$2)}'`
+        do
+            totalVMCount=$(expr $totalVMCount + 1)
+            # Take the vmid and determine powerstate
+            vmState=""
+            vmId=$(echo $myVM | cut -d',' -f1)
+            vmName=$(echo $myVM | cut -d',' -f2)
+            vmState=$(vim-cmd vmsvc/power.getstate $vmId | grep Power)
+
+            # print the results
+            echo -e "$totalVMCount\t$vmId\t$vmState\t\t$vmName"
+        done
+    else
+        vim-cmd vmsvc/getallvms
+    fi
+fi

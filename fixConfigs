@@ -1,0 +1,20 @@
+#!/bin/sh
+
+#####
+# fixConfigs
+#
+# Author: Jeff King
+#
+#####
+
+if [ $# != 3 ]; then
+    echo "Usage: $(basename $0) <configFile> <expr to replace> <new expr>"
+    echo "Example: $(basename $0) /vmfs/volumes/datastore1/EIAS_Win12Srv_10-38-225-28/EIAS_Win12Srv_10-38-225-28.vmx \"Windows-Server-2012\" \"EIAS_Win12Srv_10-38-225-28\""
+    exit
+fi
+
+configFile=$1
+oldExpr=$2
+newExpr=$3
+
+/bin/cat $configFile | sed -e "s/$oldExpr/$newExpr/" >> $configFile.new

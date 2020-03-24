@@ -1,0 +1,99 @@
+Commands available under /:
+hbrsvc/       internalsvc/  solo/         vmsvc/        
+hostsvc/      proxysvc/     vimsvc/       help          
+ 
+Commands available under hbrsvc/:
+vmreplica.abort                  vmreplica.pause                  
+vmreplica.create                 vmreplica.queryReplicationState  
+vmreplica.disable                vmreplica.reconfig               
+vmreplica.diskDisable            vmreplica.resume                 
+vmreplica.diskEnable             vmreplica.startOfflineInstance   
+vmreplica.enable                 vmreplica.stopOfflineInstance    
+vmreplica.getConfig              vmreplica.sync                   
+vmreplica.getState               
+ 
+Commands available under hostsvc/:
+advopt/                   enable_ssh                refresh_services          
+autostartmanager/         firewall_disable_ruleset  reset_service             
+datastore/                firewall_enable_ruleset   runtimeinfo               
+datastorebrowser/         get_service_status        set_hostid                
+firmware/                 hostconfig                standby_mode_enter        
+net/                      hosthardware              standby_mode_exit         
+rsrc/                     hostsummary               start_esx_shell           
+storage/                  login                     start_service             
+summary/                  logout                    start_ssh                 
+vmotion/                  maintenance_mode_enter    stop_esx_shell            
+connect                   maintenance_mode_exit     stop_service              
+cpuinfo                   pci_add                   stop_ssh                  
+disable_esx_shell         pci_remove                task_list                 
+disable_ssh               queryconnectioninfo       updateSSLThumbprintsInfo  
+disconnect                querydisabledmethods      
+enable_esx_shell          refresh_firewall          
+ 
+Commands available under internalsvc/:
+perfcount/          host_mode_lock      refresh             set_log_level       
+vprobes/            login               refresh_consolenic  shutdown            
+access_address      loglist             refresh_datastores  throw_exception     
+cold_quit           logout              refresh_gateway     use_fds             
+connect             redirect_stderr     refresh_network     
+disconnect          redirect_stdout     refresh_pnic        
+ 
+Commands available under proxysvc/:
+add_np_service   disconnect       port_info        
+add_tcp_service  login            remove_service   
+connect          logout           service_list     
+ 
+Commands available under solo/:
+connect          environment      logout           querycfgoptdesc  
+disconnect       login            querycfgopt      registervm       
+ 
+Commands available under vimsvc/:
+auth/             license           property_dump     task_info         
+connect           login             task_cancel       task_list         
+disconnect        logout            task_description  
+ 
+Commands available under vmsvc/:
+acquiremksticket                 get.snapshotinfo                 
+acquireticket                    get.spaceNeededForConsolidation  
+connect                          get.summary                      
+convert.toTemplate               get.tasklist                     
+convert.toVm                     getallvms                        
+createdummyvm                    gethostconstraints               
+destroy                          login                            
+device.connection                logout                           
+device.connusbdev                message                          
+device.disconnusbdev             power.getstate                   
+device.diskadd                   power.hibernate                  
+device.diskaddexisting           power.off                        
+device.diskremove                power.on                         
+device.getdevices                power.reboot                     
+device.toolsSyncSet              power.reset                      
+device.vmiadd                    power.shutdown                   
+device.vmiremove                 power.suspend                    
+devices.createnic                power.suspendResume              
+disconnect                       queryftcompat                    
+get.capability                   reload                           
+get.config                       setscreenres                     
+get.config.cpuidmask             snapshot.create                  
+get.configoption                 snapshot.dumpoption              
+get.datastores                   snapshot.get                     
+get.disabledmethods              snapshot.remove                  
+get.environment                  snapshot.removeall               
+get.filelayout                   snapshot.revert                  
+get.filelayoutex                 snapshot.setoption               
+get.guest                        tools.cancelinstall              
+get.guestheartbeatStatus         tools.install                    
+get.managedentitystatus          tools.upgrade                    
+get.networks                     unregister                       
+get.runtime                      upgrade                          
+ 
+Most commands take a VIM ID as their argument
+ 
+Usage: power.getstate vmid
+
+Retrieves the power state of the specified virtual machine.
+
+vim-cmd vmsvc/power.getstate 310
+ 
+Retrieved runtime info
+Powered on
