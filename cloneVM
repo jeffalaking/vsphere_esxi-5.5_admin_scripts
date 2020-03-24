@@ -1,0 +1,81 @@
+#!/bin/sh
+
+######
+# cloneVM
+#
+# Author: Jeff King
+#
+#
+#####
+
+if [ $# != 2 ]; then
+    echo "Usage: $(basename $0) <SOURCE VM PATH> <DESTINATION PATH>"
+    echo "Example: $(basename $0) /vmfs/volumes/datastore1/VM1 /vmfs/volumes/datastore2/VM1-Clone"
+    exit
+fi
+                        
+vmx=$(basename $(/bin/ls $1/*.vmx))
+name=$(grep displayName $1/$vmx | /bin/awk -F\" '{print $(NF-1)}')
+vmxf=$(grep vmxf $1/$vmx | /bin/awk -F\" '{print $(NF-1)}')
+nvram=$(grep nvram $1/$vmx | /bin/awk -F\" '{print $(NF-1)}')
+vmdks=$(grep vmdk $1/$vmx | /bin/awk -F\" '{print $(NF-1)}')
+                        
+vmDir=$(basename $1)
+vmDirPath=$(dirname $1)
+vmClonePath=$(dirname $2)
+vmClone=$(basename $2)
+destPath="$vmClonePath/$vmClone"
+                        
+echo "Source path: $1"
+echo "Destination path: $destPath"
+                        
+if [[ -e $destPath ]]
+then
+    echo "$destPath already exists!!!! Exiting."
+    exit 1
+else
+    echo "Beginning Clone of VM: $name"
+    echo "Creating destination path $destPath"
+    /bin/mkdir -p $destPath
+                        
+    echo "Copying configuration files:"
+    echo "Orig: $vmx New: $vmClone.vmx"
+    /bin/cp $1/$vmx $destPath/$vmClone.vmx
+    # Remove the old names within config file with new name
+    /vmfs/volumes/datastore1/VM_Admin_Scripts/fixConfigs $destPath/$vmClone.vmx "$vmDir" "$vmClone"
+    echo "Orig: $vmxf New: $vmClone.vmxf"
+    if [[ -s $destPath/$vmClone.vmx.new ]]
+    then
+        mv $destPath/$vmClone.vmx $destPath/$vmClone.vmx.copy
+        cp -p $destPath/$vmClone.vmx.new $destPath/$vmClone.vmx
+    fi
+    /bin/cp $1/$vmxf $destPath/$vmClone.vmxf
+    # Remove the old names within config file with new name
+    /vmfs/volumes/datastore1/VM_Admin_Scripts/fixConfigs $destPath/$vmClone.vmxf "$vmDir" "$vmClone"
+    if [[ -s $destPath/$vmClone.vmxf.new ]]
+    then
+        mv $destPath/$vmClone.vmxf $destPath/$vmClone.vmxf.copy
+        cp -p $destPath/$vmClone.vmxf.new $destPath/$vmClone.vmxf
+    fi
+    echo "Orig: $nvram New: $vmClone.nvram"
+    /bin/cp $1/$nvram $destPath/$vmClone.nvram
+                        
+    echo "Copying virtual disks:"
+    for vmdk in $vmdks;
+    do
+        echo "Cloning $vmdk to $destPath"
+        /sbin/vmkfstools -d thin -i "$1/$vmdk" "$destPath/$vmClone.vmdk"
+    done
+                                        
+    echo "Completed copying VM $name to $destPath"
+    echo " " 
+    echo "Use Datastore Browser to add $vmClone to the inventory."
+    echo "Navigate to the $destPath directory and look for $vmClone.vmx."
+    echo "Right-Mouse click the file and choose 'Add to Inventory'."
+    echo "Use the Add to Inventory process to add $vmClone to a Resource Pool"
+    echo "Upon starting the VM, choose 'I copied it' for a CLONE"
+    echo "OR choose 'I moved it' for an actual MOVE of $vmClone".
+    echo "IF you MOVED $vmClone, then be sure to clean up the original"
+    echo " $vmDirPath/$vmDir directory to recover the used storage"
+    
+fi
