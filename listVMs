@@ -3,7 +3,6 @@
 #####
 # List VMs
 #
-# Author: Jeff King
 # Usage: ./listVMs (Will get VM name only)
 #        ./listVMs -details (Will list detailed VM info)
 #        ./listVMs -help (Print usage info)
