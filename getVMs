@@ -6,7 +6,6 @@
 #
 # purpose: Get list of VMs and their status
 #
-# Author: Jeff King
 # Usage: ./getVMs (Will list VM details)
 #        ./getVMs -state (Will list VM running info)
 #        ./getVMs -help (Print usage info)
