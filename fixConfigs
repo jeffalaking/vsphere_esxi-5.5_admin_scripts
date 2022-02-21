@@ -3,8 +3,6 @@
 #####
 # fixConfigs
 #
-# Author: Jeff King
-#
 #####
 
 if [ $# != 3 ]; then
