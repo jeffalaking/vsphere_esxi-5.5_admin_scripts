@@ -3,8 +3,6 @@
 #####
 # Find dormant VMs
 #
-# Author: Jeff King
-#
 #####
 if [[ $# != 1 ]]
 then
